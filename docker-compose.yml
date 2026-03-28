@@ -2,5 +2,5 @@ services:
   email-pull:
     build: .
     ports:
-      - "8080:8016"
+      - "8016:80"
     restart: unless-stopped
