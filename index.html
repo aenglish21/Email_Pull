@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Pull</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      margin-bottom: 12px;
+    }
+
+    .card {
+      background: #1e2330;
+      border: 1px solid #2d3548;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    input[type="text"], select {
+      background: #0f1117;
+      border: 1px solid #2d3548;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      padding: 8px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: #4f7ef8;
+    }
+
+    input[type="text"] { min-width: 240px; }
+    select { min-width: 160px; cursor: pointer; }
+
+
+    .btn {
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 9px 18px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+
+    .btn-ghost {
+      background: #2d3548;
+      color: #cbd5e1;
+    }
+
+    .btn-ghost:hover:not(:disabled) { background: #374160; }
+
+    .btn-sm {
+      font-size: 0.78rem;
+      padding: 6px 12px;
+    }
+
+    /* Status bar */
+    #status-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: #162032;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+      color: #7dd3fc;
+    }
+
+    #status-bar.visible { display: flex; }
+    #status-bar.error { background: #2a1215; border-color: #7f1d1d; color: #fca5a5; }
+    #status-bar.success { background: #0d2818; border-color: #166534; color: #86efac; }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid #334155;
+      border-top-color: #4f7ef8;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Output area */
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      background: #1e3a5f;
+      color: #7dd3fc;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .tab-row {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .tab-btn {
+      background: #2d3548;
+      border: none;
+      border-radius: 5px;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 5px 12px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .tab-btn.active {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      background: #0f1117;
+      border: 1px solid #2d3548;
+      border-radius: 7px;
+      color: #e2e8f0;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      padding: 12px;
+      resize: vertical;
+      outline: none;
+    }
+
+    textarea:focus { border-color: #4f7ef8; }
+
+    .copy-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      align-items: center;
+    }
+
+    #copy-confirm {
+      font-size: 0.78rem;
+      color: #86efac;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    #copy-confirm.show { opacity: 1; }
+
+    /* Field mapping section */
+    #field-map-section { display: none; }
+
+    .field-map-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    /* Preview table */
+    #preview-section { display: none; }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 7px;
+      border: 1px solid #2d3548;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 0.8rem;
+    }
+
+    thead tr { background: #1a2235; }
+    th {
+      padding: 8px 12px;
+      text-align: left;
+      color: #94a3b8;
+      font-weight: 600;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 7px 12px;
+      border-top: 1px solid #1e2842;
+      color: #cbd5e1;
+      white-space: nowrap;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    tbody tr:hover { background: #1a2235; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #475569;
+      font-size: 0.88rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Email Pull</h1>
+
+  <!-- Config + Filters -->
+  <div class="card">
+    <h2>Configuration</h2>
+    <div class="row" style="margin-bottom: 16px;">
+      <div class="field">
+        <label>API Base URL</label>
+        <input type="text" id="api-url" />
+      </div>
+      <div class="field">
+        <label>Endpoint</label>
+        <select id="endpoint">
+          <option value="/view/memberinfo">/view/memberinfo</option>
+          <option value="/view/memberinfoandquals">/view/memberinfoandquals</option>
+          <option value="/table/member">/table/member</option>
+          <option value="/table/mbrcontact">/table/mbrcontact</option>
+        </select>
+      </div>
+    </div>
+
+    <h2>Filters</h2>
+    <div class="row">
+      <div class="field">
+        <label>Group</label>
+        <select id="grp-filter">
+          <option value="">All Groups</option>
+          <option value="1">Group 1</option>
+          <option value="2">Group 2</option>
+          <option value="3">Group 3</option>
+          <option value="4">Group 4</option>
+          <option value="5">Group 5</option>
+          <option value="6">Group 6</option>
+          <option value="7">Group 7</option>
+          <option value="8">Group 8</option>
+          <option value="9">Group 9</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Member Type</label>
+        <select id="type-filter">
+          <option value="">All Members</option>
+          <option value="CADET">Cadets Only</option>
+          <option value="SENIOR">Seniors Only</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary" id="fetch-btn" onclick="fetchEmails()">Fetch Emails</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Field Mapping (auto-shown on first fetch if fields are ambiguous) -->
+  <div class="card" id="field-map-section">
+    <h2>Field Mapping <span style="font-size:0.7rem;color:#64748b;text-transform:none;letter-spacing:0;">(auto-detected — override if needed)</span></h2>
+    <div class="field-map-grid">
+      <div class="field">
+        <label>Email Field</label>
+        <select id="map-email"></select>
+      </div>
+      <div class="field">
+        <label>Group Field</label>
+        <select id="map-grp"></select>
+      </div>
+      <div class="field">
+        <label>Cadet/Type Field</label>
+        <select id="map-type"></select>
+      </div>
+      <div class="field">
+        <label>Cadet Value</label>
+        <input type="text" id="map-cadet-val" style="min-width:120px;" value="CADET" />
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <button class="btn btn-ghost btn-sm" onclick="applyFieldMap()">Re-apply with these fields</button>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div id="status-bar">
+    <div class="spinner" id="spinner"></div>
+    <span id="status-msg">Loading…</span>
+  </div>
+
+  <!-- Email Output -->
+  <div class="card" id="output-section" style="display:none;">
+    <div class="output-header">
+      <h2>Emails</h2>
+      <span class="badge" id="count-badge">0 found</span>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab-btn active" data-fmt="semicolon" onclick="switchFmt(this)">Semicolon (Outlook)</button>
+      <button class="tab-btn" data-fmt="comma" onclick="switchFmt(this)">Comma (Gmail)</button>
+      <button class="tab-btn" data-fmt="lines" onclick="switchFmt(this)">One Per Line</button>
+    </div>
+
+    <textarea id="email-output" readonly placeholder="Emails will appear here…"></textarea>
+
+    <div class="copy-row">
+      <button class="btn btn-ghost btn-sm" onclick="copyEmails()">Copy to Clipboard</button>
+      <span id="copy-confirm">Copied!</span>
+    </div>
+  </div>
+
+  <!-- Preview Table -->
+  <div class="card" id="preview-section">
+    <div class="output-header">
+      <h2>Member Preview</h2>
+      <span style="font-size:0.75rem;color:#64748b;">First 50 results shown</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead id="preview-head"></thead>
+        <tbody id="preview-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+  // Set API URL to current origin so it works with any proxy (Docker, PS, etc.)
+  document.getElementById('api-url').value = window.location.origin;
+
+  // ── state ──────────────────────────────────────────────────────────────────
+  let allRecords = [];
+  let filteredEmails = [];
+  let currentFmt = 'semicolon';
+  let fieldMap = { email: null, grp: null, type: null, cadetVal: 'CADET' };
+
+  // ── helpers ─────────────────────────────────────────────────────────────────
+  function setStatus(msg, type = 'loading') {
+    const bar = document.getElementById('status-bar');
+    const txt = document.getElementById('status-msg');
+    const spin = document.getElementById('spinner');
+    bar.className = 'visible';
+    if (type === 'error')   { bar.classList.add('error');   spin.style.display = 'none'; }
+    else if (type === 'ok') { bar.classList.add('success'); spin.style.display = 'none'; }
+    else                    { spin.style.display = '';  }
+    txt.textContent = msg;
+  }
+
+  function hideStatus() {
+    document.getElementById('status-bar').className = '';
+  }
+
+  function guessField(keys, candidates) {
+    for (const c of candidates) {
+      const match = keys.find(k => k.toLowerCase() === c.toLowerCase());
+      if (match) return match;
+    }
+    // partial match
+    for (const c of candidates) {
+      const match = keys.find(k => k.toLowerCase().includes(c.toLowerCase()));
+      if (match) return match;
+    }
+    return keys[0] ?? null;
+  }
+
+  function autoDetectFields(keys) {
+    return {
+      email:    guessField(keys, ['email', 'Email', 'EMAIL', 'emailaddress', 'email_address', 'contact_email']),
+      grp:      guessField(keys, ['grp', 'group', 'groupnum', 'grpnum', 'group_num']),
+      type:     guessField(keys, ['type', 'membertype', 'mbr_type', 'member_type', 'captype']),
+      cadetVal: 'CADET',
+    };
+  }
+
+  function populateSelect(selectId, keys, selected) {
+    const sel = document.getElementById(selectId);
+    sel.innerHTML = '';
+    for (const k of keys) {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = k;
+      if (k === selected) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+
+  function showFieldMap(keys) {
+    populateSelect('map-email', keys, fieldMap.email);
+    populateSelect('map-grp',   keys, fieldMap.grp);
+    populateSelect('map-type',  keys, fieldMap.type);
+    document.getElementById('map-cadet-val').value = fieldMap.cadetVal;
+    document.getElementById('field-map-section').style.display = '';
+  }
+
+  function applyFieldMap() {
+    fieldMap.email    = document.getElementById('map-email').value;
+    fieldMap.grp      = document.getElementById('map-grp').value;
+    fieldMap.type     = document.getElementById('map-type').value;
+    fieldMap.cadetVal = document.getElementById('map-cadet-val').value.trim();
+    renderOutput(allRecords);
+  }
+
+  // ── fetch ───────────────────────────────────────────────────────────────────
+  async function fetchEmails() {
+    let base = document.getElementById('api-url').value.trim().replace(/\/$/, '');
+    // Auto-prepend http:// if no scheme provided
+    if (base && !/^https?:\/\//i.test(base)) base = 'http://' + base;
+    document.getElementById('api-url').value = base; // write back the fixed URL
+    const endpoint = document.getElementById('endpoint').value;
+    const grp      = document.getElementById('grp-filter').value;
+    const typeVal  = document.getElementById('type-filter').value;
+    const btn      = document.getElementById('fetch-btn');
+
+    btn.disabled = true;
+    document.getElementById('output-section').style.display  = 'none';
+    document.getElementById('preview-section').style.display = 'none';
+    allRecords = [];
+
+    // Build WHERE clause
+    const conditions = [];
+    if (grp)     conditions.push(`grp='${grp}'`);
+    if (typeVal) conditions.push(`type='${typeVal}'`);
+    const where = conditions.length ? conditions.join(' AND ') : null;
+
+    try {
+      setStatus('Fetching records…');
+
+      // Paginate — API max limit is 1000
+      const LIMIT = 1000;
+      let offset = 0;
+      let total  = 0;
+
+      while (true) {
+        const params = new URLSearchParams({ limit: LIMIT, offset });
+        if (where) params.set('where', where);
+
+        const url = `${base}${endpoint}?${params}`;
+        const res = await fetch(url);
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`HTTP ${res.status}: ${text.substring(0, 200)}`);
+        }
+
+        const data = await res.json();
+
+        // API may return array or { data: [...], total: N } or { items: [...] }
+        let rows;
+        if (Array.isArray(data))        rows = data;
+        else if (Array.isArray(data.data))  rows = data.data;
+        else if (Array.isArray(data.items)) rows = data.items;
+        else if (Array.isArray(data.results)) rows = data.results;
+        else { rows = Object.values(data).find(v => Array.isArray(v)) ?? []; }
+
+        allRecords = allRecords.concat(rows);
+        total = allRecords.length;
+        offset += LIMIT;
+
+        setStatus(`Fetching records… ${total} loaded`);
+
+        // Stop when fewer than LIMIT returned (last page)
+        if (rows.length < LIMIT) break;
+      }
+
+      if (allRecords.length === 0) {
+        setStatus('No records returned. Check filters or field names.', 'error');
+        btn.disabled = false;
+        return;
+      }
+
+      // Auto-detect fields on first real fetch
+      const keys = Object.keys(allRecords[0]);
+      fieldMap = autoDetectFields(keys);
+      fieldMap.cadetVal = document.getElementById('map-cadet-val')?.value || 'CADET';
+      showFieldMap(keys);
+
+      renderOutput(allRecords);
+      setStatus(`Done — ${allRecords.length} records fetched.`, 'ok');
+
+    } catch (err) {
+      setStatus(`Error: ${err.message}`, 'error');
+      console.error(err);
+    }
+
+    btn.disabled = false;
+  }
+
+  // ── render ───────────────────────────────────────────────────────────────────
+  function renderOutput(records) {
+    const typeVal = document.getElementById('type-filter').value;
+
+    // Extract emails using detected field map
+    const emails = [];
+    for (const r of records) {
+      const email = r[fieldMap.email];
+      if (!email) continue;
+      const e = String(email).trim();
+      if (!e || !e.includes('@')) continue;
+      // Extra type filter on client side (in case WHERE didn't include it yet)
+      if (typeVal && fieldMap.type) {
+        const val = String(r[fieldMap.type] ?? '').trim().toUpperCase();
+        if (val !== typeVal.toUpperCase()) continue;
+      }
+      emails.push(e);
+    }
+
+    // Deduplicate
+    filteredEmails = [...new Set(emails)];
+
+    // Update badge
+    document.getElementById('count-badge').textContent = `${filteredEmails.length} found`;
+
+    // Render email textarea
+    updateEmailArea();
+
+    // Show output section
+    document.getElementById('output-section').style.display = '';
+
+    // Preview table
+    renderPreview(records.slice(0, 50));
+    document.getElementById('preview-section').style.display = '';
+  }
+
+  function updateEmailArea() {
+    const ta = document.getElementById('email-output');
+    if (filteredEmails.length === 0) {
+      ta.value = '(No emails found — check field mapping above)';
+      return;
+    }
+    if (currentFmt === 'semicolon') ta.value = filteredEmails.join('; ');
+    else if (currentFmt === 'comma') ta.value = filteredEmails.join(', ');
+    else ta.value = filteredEmails.join('\n');
+  }
+
+  function switchFmt(btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFmt = btn.dataset.fmt;
+    updateEmailArea();
+  }
+
+  function copyEmails() {
+    const ta = document.getElementById('email-output');
+    ta.select();
+    navigator.clipboard.writeText(ta.value).catch(() => {
+      document.execCommand('copy');
+    });
+    const confirm = document.getElementById('copy-confirm');
+    confirm.classList.add('show');
+    setTimeout(() => confirm.classList.remove('show'), 2000);
+  }
+
+  // ── preview table ─────────────────────────────────────────────────────────
+  function renderPreview(rows) {
+    if (!rows.length) return;
+    const keys = Object.keys(rows[0]);
+
+    // Pick useful columns: prioritise name/email/grp/type fields, cap at 8
+    const priority = [fieldMap.email, fieldMap.grp, fieldMap.type];
+    const nameKeys = keys.filter(k => /name|first|last|capid/i.test(k));
+    const ordered  = [...new Set([...priority.filter(Boolean), ...nameKeys, ...keys])].slice(0, 8);
+
+    const thead = document.getElementById('preview-head');
+    const tbody = document.getElementById('preview-body');
+
+    thead.innerHTML = '<tr>' + ordered.map(k => `<th>${k}</th>`).join('') + '</tr>';
+    tbody.innerHTML = rows.map(r =>
+      '<tr>' + ordered.map(k => `<td title="${r[k] ?? ''}">${r[k] ?? ''}</td>`).join('') + '</tr>'
+    ).join('');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd /c \"python -c \"\"import json; data=json.load\\(open\\(''c:/Users/Field User/Downloads/openapi.json''\\)\\); [print\\(p\\) for p in data[''paths'']]\"\"\")",
+      "Bash(powershell -Command \":*)",
+      "Bash(powershell.exe -Command \"Get-Content ''c:/Users/Field User/Downloads/openapi.json'' | ConvertFrom-Json | Select-Object -ExpandProperty paths | Get-Member -MemberType NoteProperty | Select-Object Name\")",
+      "Bash(powershell.exe -Command \":*)",
+      "Bash(powershell.exe -Command \"Test-NetConnection -ComputerName capwatch.flwg.internal -Port 8000; Test-NetConnection -ComputerName capwatch.flwg.internal -Port 80; Test-NetConnection -ComputerName capwatch.flwg.internal -Port 443\")"
+    ]
+  }
+}
