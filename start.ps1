@@ -3,7 +3,7 @@
 # Usage: Right-click > Run with PowerShell  (or: powershell -ExecutionPolicy Bypass -File start.ps1)
 
 $PORT    = 8080
-$API_URL = "http://capwatch.flwg.internal"
+$API_URL = "http://capwatch.flwg.internal:8888"
 $HTML    = Join-Path $PSScriptRoot "index.html"
 
 $listener = New-Object System.Net.HttpListener
